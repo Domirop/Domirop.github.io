@@ -68,6 +68,7 @@ body {
 
 .divRespuestas {
     display: flex;
+    flex-wrap: wrap;
     justify-content: space-around;
     padding: 25px 0;
     .divCity {
@@ -104,6 +105,7 @@ body {
 
 #stadistics {
     display: flex;
+    flex-wrap: wrap;
     #curve_chart {
         flex-basis: 70%;
     }
