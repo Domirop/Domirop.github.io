@@ -1,0 +1,336 @@
+import gameData from './questions.js';
+
+google.charts.load('current', {'packages': ['corechart', 'line'], 'callback': drawCharts});
+
+let time = 0;
+let intentos = 0;
+let count = 0;
+let x;
+let contentGame = document.getElementById("contentGame");
+let newGame = document.getElementById("newGame");
+let timerText = document.getElementById("timer");
+let marker;
+let map;
+let correctsPieChart = [];
+let dataLineChart;
+let arrayCities = [];
+let arrayCountries = [];
+let data = gameData.countries;
+
+/**
+ * Método que genera el contenido de la gráfica circular
+ */
+function generateDataPieChart() {
+    correctsPieChart.push(['Pais', 'Contador']);
+    data.forEach(v => {
+        correctsPieChart.push([v.name, 0]);
+    });
+}
+
+/**
+ * Genera el contenido de la gráfica lineal
+ */
+function generateDataLineChart() {
+    dataLineChart = new google.visualization.DataTable();
+    dataLineChart.addColumn('number', 'Intento');
+    dataLineChart.addColumn('number', 'Tiempo');
+}
+
+/**
+ * Método que llama a los métodos para crear las gráficas necesarias
+ */
+function drawCharts() {
+    generateDataLineChart();
+    generateDataPieChart();
+    drawPieChart();
+    drawChartLine();
+}
+
+/**
+ * Método que dibuja la gráfica lineal
+ */
+function drawChartLine() {
+    var options = {
+        hAxis: {
+            title: 'Intentos',
+            textStyle: {
+                color: '#000000',
+                fontSize: 12,
+                fontName: 'Arial',
+                bold: false,
+                italic: true
+            },
+            titleTextStyle: {
+                color: '#1E90FF',
+                fontSize: 15,
+                fontName: 'Arial',
+                bold: true,
+                italic: true
+            }
+
+        },
+        vAxis: {
+            title: 'Tiempo',
+            textStyle: {
+                color: '#000000',
+                fontSize: 12,
+                bold: false
+            },
+            titleTextStyle: {
+                color: '#1E90FF',
+                fontSize: 15,
+                bold: true
+            }
+        },
+        colors: ['#1E90FF'],
+        title: 'Tiempo realizado',
+        curveType: 'function',
+    };
+    var chart = new google.visualization.LineChart(document.getElementById('curve_chart'));
+    chart.draw(dataLineChart, options);
+}
+
+/**
+ * Método que dibuja la gráfica circular
+ */
+function drawPieChart() {
+
+    var data = google.visualization.arrayToDataTable(correctsPieChart);
+
+    var options = {
+        title: 'Ocurrencia de países',
+        'width': 400,
+        'height': 250,
+    };
+
+    var chart = new google.visualization.PieChart(document.getElementById('piechart'));
+
+    chart.draw(data, options);
+}
+
+/**
+ * Método que inicia el mapa
+ */
+function initMap() {
+    map = L.map('mapid').setView([28.45800540888146, -16.2830720266886],
+        15);
+    L.tileLayer('http://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        maxZoom: 13
+    }).addTo(map);
+    L.control.scale().addTo(map);
+    marker = L.marker([28.45800540888146, -16.2830720266886], {draggable: true}).addTo(map);
+}
+
+/**
+ * Método que añade el tiempo a la gráfica lineal
+ */
+function addTime() {
+    time--;
+    dataLineChart.addRows([[intentos, time]]);
+    google.charts.setOnLoadCallback(drawChartLine);
+}
+
+/**
+ * Método que ocurre siempre que el usuario lleva a cabo una respuesta correcta
+ * @param id
+ */
+function correctAnswer(id) {
+    count++;
+    sumCorrectAnswer(id);
+    if (count === 5) {
+        intentos++;
+        clearInterval(x);
+        newGame.disabled = false;
+        addTime();
+        count = 0;
+        time = 0;
+    }
+}
+
+/**
+ * Método que suma las respuestas correctas de cada país y las añade a la gráfica circular
+ * @param id
+ */
+function sumCorrectAnswer(id) {
+    let auxCountry = data.find(v => v.code === id);
+    let auxValue = correctsPieChart.findIndex(v => v.includes(auxCountry.name));
+    correctsPieChart[auxValue][1] = correctsPieChart[auxValue][1] + 1;
+    google.charts.setOnLoadCallback(drawPieChart);
+}
+
+/**
+ * Método que mueve la posición en el mapa
+ * @param location
+ */
+function mooveMaps(location) {
+    map.removeLayer(marker);
+    let aux = location.split(",");
+    marker = L.marker([aux[0], aux[1]], {draggable: true}).addTo(map);
+    map.flyTo(aux);
+}
+
+initMap();
+
+/**
+ * Método que genera el evento draggable a las ciudades
+ * @param idSelected
+ */
+function createEventCities(idSelected) {
+    let nodo = document.getElementsByClassName(idSelected)[0];
+    $(nodo).draggable({
+        revert: 'invalid',
+    });
+}
+
+/**
+ * Método que genera el evento droppable a los países
+ * @param nodoRespuesta
+ */
+function createEventCountries(nodoRespuesta) {
+    $(nodoRespuesta).droppable({
+        accept: "." + nodoRespuesta.id,
+        drop: function (event, ui) {
+            $(this).addClass("respuestaCorrecta");
+            $("." + nodoRespuesta.id).draggable('destroy');
+            mooveMaps($("." + nodoRespuesta.id).data("location"));
+            correctAnswer(event.target.id);
+        }
+    });
+}
+
+newGame.addEventListener("click", createGameContent);
+
+/**
+ * Método que inicia el timer
+ */
+function initTimer() {
+    x = setInterval(function () {
+        timerText.innerHTML = time.toString();
+        time++;
+    }, 1000);
+}
+
+/**
+ * Método que crea todo el contenido gráfico del juego
+ */
+function createGameContent() {
+    initTimer();
+    newGame.disabled = true;
+    time = 1;
+    arrayCities = [];
+    arrayCountries = [];
+    removeChilds(contentGame);
+    generateData();
+    createNodesCities();
+    createNodesCountries();
+    createEventCities();
+    arrayCountries.forEach(v => {
+        createEventCities(v.code);
+        let nodoRespuesta = document.getElementById(v.code);
+        createEventCountries(nodoRespuesta);
+    })
+}
+
+/**
+ * Método que genera todos los datos de ciudades y países para el juego
+ */
+function generateData() {
+    let dataAux = data.slice();
+    for (let i = 0; i < 5; i++) {
+        let randomOne = Math.floor(Math.random() * dataAux.length);
+        let randomTwo = Math.floor(Math.random() * dataAux[randomOne].cities.length);
+        arrayCountries.push(dataAux[randomOne]);
+        arrayCities.push(dataAux[randomOne].cities[randomTwo]);
+        dataAux.splice(randomOne, 1);
+    }
+}
+
+/**
+ * Método que ordena de manera aleatoria un array
+ * @param arr
+ * @returns {*}
+ */
+function shuffle(arr) {
+    let i, j, temp;
+    for (i = arr.length - 1; i > 0; i--) {
+        j = Math.floor(Math.random() * (i + 1));
+        temp = arr[i];
+        arr[i] = arr[j];
+        arr[j] = temp;
+    }
+    return arr;
+}
+
+/**
+ * Método que crea los nodos de las ciudades
+ */
+function createNodesCities() {
+    let citiesShuffle = shuffle(arrayCities);
+    let divRespuesta = createBasicNodeElement("div", "divRespuestas divWithBorderDotted", null, null, null, null);
+    citiesShuffle.forEach(v => {
+        let codeCountry = arrayCountries.find(c => c.cities.includes(v)).code;
+        let divCity = createBasicNodeElement("div", `divCity ${codeCountry}`, v.name, null, null, v.location.toString());
+        divRespuesta.appendChild(divCity);
+    });
+    contentGame.appendChild(divRespuesta);
+}
+
+/**
+ * Método que crea los nodos de los países
+ */
+function createNodesCountries() {
+    let countryShuffle = shuffle(arrayCountries);
+    let divRespuesta = createBasicNodeElement("div", "divRespuestas", null, null, null, null);
+    countryShuffle.forEach(v => {
+        let divCountry = createBasicNodeElement("div", "divCountry", null, null, null, null);
+        let titlleCountry = createBasicNodeElement("div", "titleCountry", v.name, null, null, null);
+        divCountry.appendChild(titlleCountry);
+        let respuesta = createBasicNodeElement("div", "respuesta", null, null, v.code, null);
+        divCountry.appendChild(respuesta);
+        divRespuesta.appendChild(divCountry);
+    });
+    contentGame.appendChild(divRespuesta);
+}
+
+/**
+ * Método para crear Nodos
+ * @param tag
+ * @param className
+ * @param text
+ * @param value
+ * @param id
+ * @param extraData
+ * @returns {*}
+ */
+function createBasicNodeElement(tag, className, text, value, id, extraData) {
+    let mainElement = document.createElement(tag);
+    if (className !== null) {
+        mainElement.className = className;
+    }
+    if (id !== null) {
+        mainElement.id = id;
+    }
+    if (value !== null) {
+        mainElement.value = value;
+    }
+    let nodeText;
+    if (text !== null) {
+        nodeText = document.createTextNode(text);
+        mainElement.appendChild(nodeText);
+    }
+    if (extraData !== null) {
+        $(mainElement).data("location", extraData);
+    }
+    return mainElement;
+}
+
+/**
+ * Método para eliminar nodos de forma recursiva
+ * @param node
+ */
+function removeChilds(node) {
+    while (node.childNodes.length > 0) {
+        removeChilds(node.lastChild);
+        node.removeChild(node.lastChild);
+    }
+}

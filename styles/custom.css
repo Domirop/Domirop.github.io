@@ -1,0 +1,109 @@
+* {
+  box-sizing: border-box;
+}
+
+body {
+  height: 100%;
+  width: 100%;
+  display: flex;
+  margin: 0;
+  padding: 0;
+  flex-direction: column;
+}
+
+#header {
+  text-align: center;
+  color: white;
+  background-color: #1e90ff;
+}
+
+#main {
+  display: flex;
+  border-bottom: #1e90ff 1px solid;
+}
+#main #game {
+  flex-basis: 65%;
+  width: 100%;
+  height: 340px;
+}
+#main #game .textosSeparados {
+  display: flex;
+  justify-content: space-between;
+  padding: 10px 10px;
+  color: dodgerblue;
+  background-color: lightblue;
+  align-items: center;
+}
+#main #game .textosSeparados #newGame {
+  border: dodgerblue 1px solid;
+  background-color: aliceblue;
+  border-radius: 10px;
+  color: blue;
+  padding: 7px 13px;
+}
+#main #game .textosSeparados #newGame:focus {
+  outline: none;
+  background-color: cornflowerblue;
+}
+#main #game .textosSeparados #newGame:active {
+  background-color: cornflowerblue;
+}
+#main #game .textosSeparados #newGame:hover {
+  background-color: skyblue;
+}
+#main #game .textosSeparados #newGame:disabled {
+  background-color: lightgrey;
+}
+#main #mapid {
+  width: 100%;
+  flex-basis: 35%;
+  height: auto;
+}
+
+.divRespuestas {
+  display: flex;
+  justify-content: space-around;
+  padding: 25px 0;
+}
+.divRespuestas .divCity {
+  background-color: aliceblue;
+  color: dodgerblue;
+  border: dodgerblue 1px solid;
+  border-radius: 10px;
+  padding: 15px 10px;
+}
+.divRespuestas .divCountry {
+  color: dodgerblue;
+  border: dodgerblue 1px solid;
+  width: 100%;
+  margin: 0 3%;
+  text-align: center;
+}
+.divRespuestas .divCountry .titleCountry {
+  background-color: aliceblue;
+  padding: 10px 0;
+  border-bottom: dodgerblue 1px solid;
+}
+.divRespuestas .divCountry .respuesta {
+  height: 80px;
+}
+
+.divWithBorderDotted {
+  border-bottom: 1px dotted dodgerblue;
+}
+
+.respuestaCorrecta {
+  background-color: mediumseagreen;
+}
+
+#stadistics {
+  display: flex;
+}
+#stadistics #curve_chart {
+  flex-basis: 70%;
+}
+#stadistics #piechart {
+  flex-basis: 30%;
+}
+
+/*# sourceMappingURL=custom.css.map */
